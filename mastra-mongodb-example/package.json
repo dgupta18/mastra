@@ -1,0 +1,28 @@
+{
+  "name": "mastra-mongodb-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "demo:vector": "node src/vector-example.js",
+    "demo:storage": "node src/storage-example.js",
+    "setup": "node src/setup.js"
+  },
+  "keywords": [
+    "mastra",
+    "mongodb",
+    "vector-database",
+    "ai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "Example of using Mastra AI with MongoDB for vector database and app storage",
+  "dependencies": {
+    "@mastra/mongodb": "^0.14.2",
+    "dotenv": "^17.2.2",
+    "mongodb": "^6.20.0",
+    "openai": "^5.23.1",
+    "uuid": "^13.0.0"
+  }
+}
