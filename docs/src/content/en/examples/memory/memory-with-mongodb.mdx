@@ -1,0 +1,106 @@
+---
+title: "Example: Memory with MongoDB | Memory | Mastra Docs"
+description: Example for how to use Mastra's memory system with MongoDB storage and vector capabilities.
+---
+
+# Memory with MongoDB
+
+This example demonstrates how to use Mastra's memory system with MongoDB as both the storage backend and the vector database (Atlas Vector Search).
+
+## Prerequisites
+
+This example uses the `openai` model and requires a MongoDB deployment with Atlas Search enabled (Atlas or Atlas Local). Add the following to your `.env` file:
+
+```bash filename=".env" copy
+OPENAI_API_KEY=<your-api-key>
+MONGODB_URL=<your-connection-string>
+MONGODB_DB=mastra
+```
+
+Install the following package:
+
+```bash copy
+npm install @mastra/mongodb
+```
+
+## Adding memory to an agent
+
+To add MongoDB memory to an agent use the `Memory` class and create a new `storage` key using `MongoDBStore`, and a `vector` using `MongoDBVector`.
+
+```typescript filename="src/mastra/agents/example-mongodb-agent.ts" showLineNumbers copy
+import { Memory } from "@mastra/memory";
+import { Agent } from "@mastra/core/agent";
+import { openai } from "@ai-sdk/openai";
+import { MongoDBStore, MongoDBVector } from "@mastra/mongodb";
+
+export const mongoAgent = new Agent({
+  name: "mongo-agent",
+  instructions: "You are an AI agent with the ability to automatically recall memories from previous interactions.",
+  model: openai("gpt-4o"),
+  memory: new Memory({
+    storage: new MongoDBStore({
+      url: process.env.MONGODB_URL!,
+      dbName: process.env.MONGODB_DB || "mastra"
+    }),
+    vector: new MongoDBVector({
+      uri: process.env.MONGODB_URL!,
+      dbName: process.env.MONGODB_DB || "mastra"
+    }),
+    embedder: openai.embedding('text-embedding-3-small'),
+    options: {
+      lastMessages: 10,
+      semanticRecall: {
+        topK: 3,
+        messageRange: 2
+      }
+    }
+  })
+});
+```
+
+## Usage example
+
+Use `memoryOptions` to scope recall for this request. Set `lastMessages: 5` to limit recency-based recall, and use `semanticRecall` to fetch the `topK: 3` most relevant messages, including `messageRange: 2` neighboring messages for context around each match.
+
+```typescript filename="src/test-mongo-agent.ts" showLineNumbers copy
+import "dotenv/config";
+
+import { mastra } from "./mastra";
+
+const threadId = "123";
+const resourceId = "user-456";
+
+const agent = mastra.getAgent("mongoAgent");
+
+const message = await agent.stream("My name is Mastra", {
+  memory: {
+    thread: threadId,
+    resource: resourceId
+  }
+});
+
+await message.textStream.pipeTo(new WritableStream());
+
+const stream = await agent.stream("What's my name?", {
+  memory: {
+    thread: threadId,
+    resource: resourceId
+  },
+  memoryOptions: {
+    lastMessages: 5,
+    semanticRecall: {
+      topK: 3,
+      messageRange: 2
+    }
+  }
+});
+
+for await (const chunk of stream.textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+## Related
+
+- [Calling Agents](../agents/calling-agents.mdx)
+

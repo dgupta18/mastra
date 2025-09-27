@@ -5,6 +5,7 @@ const meta = {
   "memory-processors": "Memory Processors",
   "memory-with-libsql": "Memory with LibSQL",
   "memory-with-pg": "Memory with PostgreSQL",
+  "memory-with-mongodb": "Memory with MongoDB",
   "memory-with-upstash": "Memory with Upstash",
 };
 
